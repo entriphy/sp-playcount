@@ -43,7 +43,6 @@ class GQLQuery():
         }
 
         response = await self.__client.get(SPOTIFY_PARTNER_URL + "/pathfinder/v1/query", params=params, headers=self.__headers)
-        print(response.status)
         res_json = await response.json()
         return res_json
 

@@ -1,4 +1,5 @@
 from aiohttp import web, ClientSession
+from async_lru import alru_cache
 import queries
 from queries.gql_query import GQLQuery
 import time
@@ -36,15 +37,21 @@ class App:
     async def handle_request(self, request: web.Request):
         path = request.path
         if path not in self.queries_map:
-            return web.json_response({"error": ""}, status=400)
+            return web.json_response({"error": "Invalid endpoint " + path}, status=400)
         if "id" not in request.query:
             return web.json_response({"error": "id is not defined in the query"}, status=400)
         id = request.query["id"]
         if len(id) != 22:
             return web.json_response({"error": "id must have a length of 22 characters"}, status=400)
+        response = await self.do_query(path, id)
+        return web.json_response(response)
+    
+    
+    @alru_cache(maxsize=1024, ttl=60*60*6)
+    async def do_query(self, path, id) -> dict:
         query = self.queries_map[path]
         response = await query.send_query(id)
-        return web.json_response(response)
+        return response
 
 
     async def refresh_token(self):
