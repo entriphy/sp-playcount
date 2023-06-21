@@ -1,8 +1,7 @@
 from aiohttp import web, ClientSession
-from async_lru import alru_cache
+from aiocache import cached, Cache
 import queries
 from queries.gql_query import GQLQuery
-import time
 import typing
 
 SPOTIFY_WEB_URL = "https://open.spotify.com"
@@ -48,7 +47,7 @@ class App:
         return web.json_response(response)
     
     
-    @alru_cache(maxsize=1024, ttl=60*60*6)
+    @cached(ttl=6*60*60, cache=Cache.MEMORY)
     async def do_query(self, path, id) -> dict:
         query = self.queries_map[path]
         response = await query.send_query(id)
