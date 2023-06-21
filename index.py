@@ -1,6 +1,7 @@
 import asyncio
 from app import App
 from aiohttp import web
+import os
 
 async def main(event_loop: asyncio.AbstractEventLoop):
     app = App()
@@ -8,8 +9,9 @@ async def main(event_loop: asyncio.AbstractEventLoop):
 
     runner = web.AppRunner(app.app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", port=8080)
+    site = web.TCPSite(runner, "0.0.0.0", port=int(os.getenv("PORT", 8080)))
     await site.start()
+    print("Site running on port " + str(site._port))
 
     # This is broken
     while True:

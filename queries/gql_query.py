@@ -34,7 +34,7 @@ class GQLQuery():
         }
     
     
-    # All queries require either an album or artist ID
+    # All queries require either an album or artist ID, so we only need ID as a parameter
     async def send_query(self, id: str) -> dict:
         params = {
             "operationName": self.name, 
