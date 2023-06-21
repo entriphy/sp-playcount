@@ -39,9 +39,10 @@ class App:
             return web.json_response({"error": ""}, status=400)
         if "id" not in request.query:
             return web.json_response({"error": "id is not defined in the query"}, status=400)
-        
-        query = self.queries_map[path]
         id = request.query["id"]
+        if len(id) != 22:
+            return web.json_response({"error": "id must have a length of 22 characters"}, status=400)
+        query = self.queries_map[path]
         response = await query.send_query(id)
         return web.json_response(response)
 
