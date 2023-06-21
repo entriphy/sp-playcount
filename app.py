@@ -3,6 +3,7 @@ from async_lru import alru_cache
 import queries
 from queries.gql_query import GQLQuery
 import time
+import typing
 
 SPOTIFY_WEB_URL = "https://open.spotify.com"
 SPOTIFY_APP_VERSION = "1.2.15.275.g634be5e0" # This should probably be scraped from the web player
@@ -14,7 +15,7 @@ class App:
     headers: dict
     client_id: str
     access_token_expiration: int
-    queries_map: dict[str, GQLQuery]
+    queries_map: typing.Dict[str, GQLQuery]
 
     def __init__(self):
         self.app = web.Application()
