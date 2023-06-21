@@ -16,7 +16,8 @@ async def main(event_loop: asyncio.AbstractEventLoop):
     # This is broken
     while True:
         try:
-            await asyncio.sleep(60)
+            await asyncio.sleep(15 * 60)
+            await app.refresh_token()
         except:
             await app.cleanup()
 
