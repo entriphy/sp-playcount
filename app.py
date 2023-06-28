@@ -7,6 +7,10 @@ import typing
 SPOTIFY_WEB_URL = "https://open.spotify.com"
 SPOTIFY_APP_VERSION = "1.2.15.275.g634be5e0" # This should probably be scraped from the web player
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+DEFAULT_RESPONSE_HEADERS = {
+    "Access-Control-Allow-Headers": "*"
+}
+
 
 class App:
     app: web.Application
@@ -37,22 +41,22 @@ class App:
     async def handle_request(self, request: web.Request):
         path = request.path
         if path not in self.queries_map:
-            return web.json_response({"success": False, "data": "Invalid endpoint " + path}, status=400)
+            return web.json_response({"success": False, "data": "Invalid endpoint " + path}, status=400, headers=DEFAULT_RESPONSE_HEADERS)
         id = request.query.get("id", request.query.get("albumid", request.query.get("artistid")))
         if id == None:
-            return web.json_response({"success": False, "data": "id is not defined in the query"}, status=400)
+            return web.json_response({"success": False, "data": "id is not defined in the query"}, status=400, headers=DEFAULT_RESPONSE_HEADERS)
         if len(id) != 22:
-            return web.json_response({"success": False, "data": "id must have a length of 22 characters"}, status=400)
+            return web.json_response({"success": False, "data": "id must have a length of 22 characters"}, status=400, headers=DEFAULT_RESPONSE_HEADERS)
         
         try:
             response = await self.do_query(path, id)
-            return web.json_response({"success": True, "data": response})
+            return web.json_response({"success": True, "data": response}, status=200, headers=DEFAULT_RESPONSE_HEADERS)
         except (QueryError, ParseError) as e:
-            return web.json_response({"success": False, "data": str(e)}, status=500)
+            return web.json_response({"success": False, "data": str(e)}, status=500, headers=DEFAULT_RESPONSE_HEADERS)
         except NotFoundError as e:
-            return web.json_response({"success": False, "data": str(e)}, status=404)
+            return web.json_response({"success": False, "data": str(e)}, status=404, headers=DEFAULT_RESPONSE_HEADERS)
         except Exception as e:
-            return web.json_response({"success": False, "data": "An unknown error occurred: " + str(e)}, status=500)
+            return web.json_response({"success": False, "data": "An unknown error occurred: " + str(e)}, status=500, headers=DEFAULT_RESPONSE_HEADERS)
     
     
     @cached(ttl=6*60*60, cache=Cache.MEMORY)
