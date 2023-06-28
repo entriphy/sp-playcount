@@ -64,7 +64,8 @@ class App:
         except Exception as e:
             raise QueryError("Error while querying: " + str(e))
         
-        if "artistUnion" in response["data"] and response["data"]["artistUnion"]["__typename"] == "NotFound":
+        union = response["data"].get("artistUnion", response["data"].get("albumUnion"))
+        if union == None or union["__typename"] == "NotFound":
             raise NotFoundError("id not found: " + id)
 
         try:
