@@ -213,7 +213,7 @@ class AlbumPlayCount(GQLQuery):
         uri = response_json["uri"]
         name = response_json["name"]
         cover = { "uri": response_json["coverArt"]["sources"][0]["url"] }
-        date = datetime.fromisoformat(response_json["date"]["isoString"])
+        date = datetime.strptime(response_json["date"]["isoString"], "%Y-%m-%dT%H:%M:%SZ")
         year = date.year
         month = date.month
         day = date.day
