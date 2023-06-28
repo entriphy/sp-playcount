@@ -37,21 +37,41 @@ class App:
     async def handle_request(self, request: web.Request):
         path = request.path
         if path not in self.queries_map:
-            return web.json_response({"error": "Invalid endpoint " + path}, status=400)
-        if "id" not in request.query:
-            return web.json_response({"error": "id is not defined in the query"}, status=400)
-        id = request.query["id"]
+            return web.json_response({"success": False, "data": "Invalid endpoint " + path}, status=400)
+        id = request.query.get("id", request.query.get("albumid", request.query.get("artistid")))
+        if id == None:
+            return web.json_response({"success": False, "data": "id is not defined in the query"}, status=400)
         if len(id) != 22:
-            return web.json_response({"error": "id must have a length of 22 characters"}, status=400)
-        response = await self.do_query(path, id)
-        return web.json_response(response)
+            return web.json_response({"success": False, "data": "id must have a length of 22 characters"}, status=400)
+        
+        try:
+            response = await self.do_query(path, id)
+            return web.json_response({"success": True, "data": response})
+        except (QueryError, ParseError) as e:
+            return web.json_response({"success": False, "data": str(e)}, status=500)
+        except NotFoundError as e:
+            return web.json_response({"success": False, "data": str(e)}, status=404)
+        except Exception as e:
+            return web.json_response({"success": False, "data": "An unknown error occurred: " + str(e)}, status=500)
     
     
     @cached(ttl=6*60*60, cache=Cache.MEMORY)
     async def do_query(self, path, id) -> dict:
         query = self.queries_map[path]
-        response = await query.send_query(id)
-        return response
+
+        try:
+            response = await query.send_query(id)
+        except Exception as e:
+            raise QueryError("Error while querying: " + str(e))
+        
+        if "artistUnion" in response["data"] and response["data"]["artistUnion"]["__typename"] == "NotFound":
+            raise NotFoundError("id not found: " + id)
+
+        try:
+            parsed_response = query.parse_response(response)
+            return parsed_response
+        except Exception as e:
+            raise ParseError("Error while parsing response: " + str(e))
 
 
     async def refresh_token(self):
@@ -66,3 +86,14 @@ class App:
     async def cleanup(self):
         await self.client.close()
 
+
+class QueryError(Exception):
+    ...
+
+
+class ParseError(Exception):
+    ...
+
+
+class NotFoundError(Exception):
+    ...

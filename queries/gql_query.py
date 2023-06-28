@@ -24,6 +24,9 @@ class GQLQuery():
     def get_variables(self, id: str) -> dict:
         pass
 
+    @abstractmethod
+    def parse_response(self, response_json: dict) -> dict:
+        return response_json
 
     def __get_extensions(self) -> dict:
         return {
@@ -32,7 +35,6 @@ class GQLQuery():
                 "sha256Hash": self.gql_query_hash
             }
         }
-    
     
     # All queries require either an album or artist ID, so we only need ID as a parameter
     async def send_query(self, id: str) -> dict:
