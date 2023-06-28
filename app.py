@@ -8,7 +8,7 @@ SPOTIFY_WEB_URL = "https://open.spotify.com"
 SPOTIFY_APP_VERSION = "1.2.15.275.g634be5e0" # This should probably be scraped from the web player
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
 DEFAULT_RESPONSE_HEADERS = {
-    "Access-Control-Allow-Headers": "*"
+    "Access-Control-Allow-Origin": "*"
 }
 
 
