@@ -232,7 +232,7 @@ class AlbumPlayCount(GQLQuery):
                 "tracks": [
                     {
                         "uri": track["track"]["uri"],
-                        "playcount": track["track"]["playcount"],
+                        "playcount": int(track["track"]["playcount"]),
                         "name": track["track"]["name"],
                         "popularity": 0, # Not implemented
                         "number": track["track"]["trackNumber"],
