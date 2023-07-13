@@ -10,7 +10,7 @@ async def main(event_loop: asyncio.AbstractEventLoop = None):
 
     runner = web.AppRunner(app.app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", port=int(os.getenv("PORT", 8080)))
+    site = web.TCPSite(runner, "0.0.0.0", port=int(os.getenv("PORT", 5050)))
     await site.start()
     print("Site running on port " + str(site._port))
 
