@@ -3,13 +3,13 @@ from app import App
 from aiohttp import web
 import os
 
-async def main(event_loop: asyncio.AbstractEventLoop):
+async def main(event_loop: asyncio.AbstractEventLoop = None):
     app = App()
     await app.refresh_token()
 
     runner = web.AppRunner(app.app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", port=int(os.getenv("PORT", 8080)))
+    site = web.TCPSite(runner, "0.0.0.0", port=int(os.getenv("PORT", 5001)))
     await site.start()
     print("Site running on port " + str(site._port))
 
@@ -20,6 +20,7 @@ async def main(event_loop: asyncio.AbstractEventLoop):
             await app.refresh_token()
         except:
             await app.cleanup()
+
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
