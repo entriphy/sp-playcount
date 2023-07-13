@@ -3,7 +3,8 @@ from app import App
 from aiohttp import web
 import os
 
-async def main(event_loop: asyncio.AbstractEventLoop):
+
+async def main(event_loop: asyncio.AbstractEventLoop = None):
     app = App()
     await app.refresh_token()
 
@@ -20,6 +21,7 @@ async def main(event_loop: asyncio.AbstractEventLoop):
             await app.refresh_token()
         except:
             await app.cleanup()
+
 
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
