@@ -1,10 +1,7 @@
 import asyncio
 from app import App
 from aiohttp import web
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
 
 async def main(event_loop: asyncio.AbstractEventLoop = None):
     app = App()

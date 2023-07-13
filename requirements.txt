@@ -8,6 +8,5 @@ click==8.1.4
 gunicorn==20.1.0
 idna==3.4
 multidict==6.0.4
-python-dotenv==1.0.0
 uvicorn==0.22.0
 yarl==1.9.2
