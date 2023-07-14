@@ -3,6 +3,7 @@ from aiocache import cached, Cache
 import queries
 from queries.gql_query import GQLQuery
 import typing
+import datetime
 
 SPOTIFY_WEB_URL = "https://open.spotify.com"
 SPOTIFY_APP_VERSION = "1.2.15.275.g634be5e0" # This should probably be scraped from the web player
@@ -40,6 +41,9 @@ class App:
 
     async def handle_request(self, request: web.Request):
         path = request.path
+        
+        print(f'[{datetime.datetime.now()}] "{request.method}" {path}')
+        
         if path not in self.queries_map:
             return web.json_response({"success": False, "data": "Invalid endpoint " + path}, status=400, headers=DEFAULT_RESPONSE_HEADERS)
         id = request.query.get("id", request.query.get("albumid", request.query.get("artistid")))
