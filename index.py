@@ -25,7 +25,7 @@ async def main(event_loop: asyncio.AbstractEventLoop = None):
     runner = web.AppRunner(app.app)
     await runner.setup()
     # port = find_available_port(5000, 8000)
-    site = web.TCPSite(runner, "0.0.0.0", port=int(os.getenv("XPORT", 5001)))
+    site = web.TCPSite(runner, "0.0.0.0", port=int(os.getenv("PORT", 5001)))
     await site.start()
     print("Site running on port " + str(site._port))
 
