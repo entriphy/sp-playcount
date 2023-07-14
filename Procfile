@@ -1,1 +1,1 @@
-web: gunicorn -c gunicorn_config.py index:main
+web: python3 index.py
