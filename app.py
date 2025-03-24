@@ -1,15 +1,20 @@
 from aiohttp import web, ClientSession
 from aiocache import cached, Cache
+import base64
+import pyotp
 import queries
 from queries.gql_query import GQLQuery
+import time
 import typing
 
 SPOTIFY_WEB_URL = "https://open.spotify.com"
-SPOTIFY_APP_VERSION = "1.2.15.275.g634be5e0" # This should probably be scraped from the web player
-USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
 DEFAULT_RESPONSE_HEADERS = {
     "Access-Control-Allow-Origin": "*"
 }
+CIPHER = [12, 56, 76, 33, 88, 44, 88, 33, 78, 78, 11, 66, 22, 22, 55, 69, 54]
+PROCESSED_CIPHER = "".join(str(c ^ (i % 33 + 9)) for i, c in enumerate(CIPHER))
+CIPHER_BYTES = PROCESSED_CIPHER.encode("ascii")
 
 
 class App:
@@ -29,7 +34,6 @@ class App:
             "content-type": "application/json",
             "origin": SPOTIFY_WEB_URL,
             "referer": SPOTIFY_WEB_URL + "/",
-            "spotify-app-version": SPOTIFY_APP_VERSION,
             "user-agent": USER_AGENT
         }
 
@@ -80,9 +84,23 @@ class App:
 
 
     async def refresh_token(self):
-        response = await self.client.get("https://open.spotify.com/get_access_token", params={"reason": "transpost", "productType": "web_player"})
-        access_token_json = await response.json()
+        # Get TOTP (see issue #3)
+        server_time_response = await self.client.get("https://open.spotify.com/server-time")
+        server_time_json = await server_time_response.json()
+        server_time = int(server_time_json["serverTime"])
+        secret = base64.b32encode(CIPHER_BYTES).decode("ascii").strip("=")
+        totp = pyotp.TOTP(secret).at(server_time)
 
+        # Get access token
+        params = {
+            "reason": "transport",
+            "productType": "web-player",
+            "totp": totp,
+            "totpVer": 5,
+            "ts": int(time.time())
+        }
+        response = await self.client.get("https://open.spotify.com/get_access_token", params=params)
+        access_token_json = await response.json()
         self.headers["authorization"] = "Bearer " + access_token_json["accessToken"]
         self.client_id = access_token_json["clientId"]
         self.access_token_expiration = access_token_json["accessTokenExpirationTimestampMs"]
