@@ -711,6 +711,6 @@ class QueryArtistOverview(GQLQuery):
         return {
             "uri": "spotify:artist:" + id,
             "locale": "",
-            "includePrerelease": "true"
+            "includePrerelease": True
         }
     
