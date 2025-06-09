@@ -5,6 +5,7 @@ import pyotp
 import queries
 from queries.gql_query import GQLQuery
 import time
+from datetime import datetime
 import typing
 
 SPOTIFY_WEB_URL = "https://open.spotify.com"
@@ -85,11 +86,8 @@ class App:
 
     async def refresh_token(self):
         # Get TOTP (see issue #3)
-        server_time_response = await self.client.get("https://open.spotify.com/server-time")
-        server_time_json = await server_time_response.json()
-        server_time = int(server_time_json["serverTime"])
         secret = base64.b32encode(CIPHER_BYTES).decode("ascii").strip("=")
-        totp = pyotp.TOTP(secret).at(server_time)
+        totp = pyotp.TOTP(secret).at(datetime.now())
 
         # Get access token
         params = {
@@ -97,9 +95,8 @@ class App:
             "productType": "web-player",
             "totp": totp,
             "totpVer": 5,
-            "ts": int(time.time())
         }
-        response = await self.client.get("https://open.spotify.com/get_access_token", params=params)
+        response = await self.client.get("https://open.spotify.com/api/token", params=params)
         access_token_json = await response.json()
         self.headers["authorization"] = "Bearer " + access_token_json["accessToken"]
         self.client_id = access_token_json["clientId"]
