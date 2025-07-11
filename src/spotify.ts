@@ -6,10 +6,10 @@ const SPOTIFY_WEB_URL = "https://open.spotify.com"
 const SPOTIFY_APP_VERSION = "1.2.68.438.ga33faf54" // This should probably be scraped from the web player
 const USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
 const SPOTIFY_PARTNER_URL = "https://api-partner.spotify.com";
-const CIPHER = [61, 110, 58, 98, 35, 79, 117, 69, 102, 72, 92, 102, 69, 93, 41, 101, 42, 75];
+const CIPHER = [59, 92, 64, 70, 99, 78, 117, 75, 99, 103, 116, 67, 103, 51, 87, 63, 93, 59, 70, 45, 32];
 const PROCESSED_CIPHER = CIPHER.map((c, i) => (c ^ (i % 33 + 9)).toString()).join("")
 const CIPHER_BYTES = Uint8Array.from(PROCESSED_CIPHER.split("").map(c => c.charCodeAt(0)))
-const TOTP_VER = "10";
+const TOTP_VER = "13";
 
 interface TokenResponse {
   clientId: string;
@@ -36,14 +36,17 @@ async function refreshToken(): Promise<TokenResponse> {
 }
 
 async function getToken(kv: KVNamespace<string>): Promise<string> {
-  const token = await kv.get("token");
+  const token = await kv.get<TokenResponse>("token", "json");
   const date = new Date();
-  if (token === null || date > new Date(parseInt(token.split("@")[1]))) {
+  if (token === null || date > new Date(token.accessTokenExpirationTimestampMs)) {
     const res = await refreshToken();
-    await kv.put("token", `${res.accessToken}@${res.accessTokenExpirationTimestampMs}`);
+    if (res.accessToken === undefined) {
+      throw new Error("Failed to refresh access token");
+    }
+    await kv.put("token", JSON.stringify(res));
     return res.accessToken;
   } else {
-    return token.split("@")[0];
+    return token.accessToken;
   }
 }
 
