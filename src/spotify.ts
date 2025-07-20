@@ -6,10 +6,7 @@ const SPOTIFY_WEB_URL = "https://open.spotify.com"
 const SPOTIFY_APP_VERSION = "1.2.68.438.ga33faf54" // This should probably be scraped from the web player
 const USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
 const SPOTIFY_PARTNER_URL = "https://api-partner.spotify.com";
-const CIPHER = [59, 92, 64, 70, 99, 78, 117, 75, 99, 103, 116, 67, 103, 51, 87, 63, 93, 59, 70, 45, 32];
-const PROCESSED_CIPHER = CIPHER.map((c, i) => (c ^ (i % 33 + 9)).toString()).join("")
-const CIPHER_BYTES = Uint8Array.from(PROCESSED_CIPHER.split("").map(c => c.charCodeAt(0)))
-const TOTP_VER = "13";
+const SPOTIFY_SECRETS_URL = "https://raw.githubusercontent.com/Thereallo1026/spotify-secrets/refs/heads/main/secrets/secretBytes.json"
 
 interface TokenResponse {
   clientId: string;
@@ -19,17 +16,28 @@ interface TokenResponse {
   _notes: string;
   totpVerExpired: string;
   totpValidUntil: string;
-}
+};
+
+interface SpotifySecret {
+  version: number;
+  secret: number[];
+};
 
 async function refreshToken(): Promise<TokenResponse> {
-  const secret = base32Encode(CIPHER_BYTES, "RFC4648", { padding: false });
+  const secretsRes = await fetch(SPOTIFY_SECRETS_URL);
+  const secrets = await secretsRes.json<SpotifySecret[]>();
+  const secretInfo = secrets.pop()!;
+
+  const processedCipher = secretInfo.secret.map((c, i) => (c ^ (i % 33 + 9)).toString()).join("")
+  const cipherBytes = Uint8Array.from(processedCipher.split("").map(c => c.charCodeAt(0)))
+  const secret = base32Encode(cipherBytes, "RFC4648", { padding: false });
   const { otp } = TOTP.generate(secret);
 
   const url = new URL("/api/token", SPOTIFY_WEB_URL);
   url.searchParams.set("reason", "init");
   url.searchParams.set("productType", "web-player");
   url.searchParams.set("totp", otp);
-  url.searchParams.set("totpVer", TOTP_VER);
+  url.searchParams.set("totpVer", secretInfo.version.toString());
 
   const response = await fetch(url, { method: "GET" });
   return response.json()
