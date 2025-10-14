@@ -6,7 +6,6 @@ const SPOTIFY_WEB_URL = "https://open.spotify.com"
 const SPOTIFY_APP_VERSION = "1.2.68.438.ga33faf54" // This should probably be scraped from the web player
 const USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
 const SPOTIFY_PARTNER_URL = "https://api-partner.spotify.com";
-const SPOTIFY_SECRETS_URL = "https://raw.githubusercontent.com/Thereallo1026/spotify-secrets/refs/heads/main/secrets/secretBytes.json"
 
 interface TokenResponse {
   clientId: string;
@@ -23,8 +22,12 @@ interface SpotifySecret {
   secret: number[];
 };
 
-async function refreshToken(): Promise<TokenResponse> {
-  const secretsRes = await fetch(SPOTIFY_SECRETS_URL);
+async function refreshToken(kv: KVNamespace<string>): Promise<TokenResponse> {
+  const secretsUrl = await kv.get("secrets_url");
+  if (secretsUrl === null) {
+    throw new Error("secrets_url is not set");
+  }
+  const secretsRes = await fetch(secretsUrl);
   const secrets = await secretsRes.json<SpotifySecret[]>();
   const secretInfo = secrets.pop()!;
 
@@ -47,7 +50,7 @@ async function getToken(kv: KVNamespace<string>): Promise<string> {
   const token = await kv.get<TokenResponse>("token", "json");
   const date = new Date();
   if (token === null || date > new Date(token.accessTokenExpirationTimestampMs)) {
-    const res = await refreshToken();
+    const res = await refreshToken(kv);
     if (res.accessToken === undefined) {
       throw new Error("Failed to refresh access token");
     }

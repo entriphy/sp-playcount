@@ -12,6 +12,20 @@ npm install
 npm run dev
 ```
 
+## Secrets
+[As of October 10th, 2025](https://github.com/librespot-org/librespot/discussions/1562), secrets required for authentication will not be provided in this repository. A URL to a raw JSON file containing a list of secrets with the following format must be provided:
+```ts
+interface SpotifySecret {
+  version: number;
+  secret: number[];
+};
+```
+The secrets URL can be set using the following command:
+```bash
+npx wrangler kv key put --binding=KV secrets_url <url>
+```
+A certain [horse](https://umamusume.jp/character/haruurara) may help you out with this one. 🐴
+
 ## Endpoints
 All endpoints take `id` as a query parameter, where `id` is either an album ID or an artist ID. (e.g. [`/getAlbum?id=4P5WTqxveCHwel30kXJvoo`](https://api.t4ils.dev/getAlbum?id=4P5WTqxveCHwel30kXJvoo)) Some endpoints have a legacy endpoint to provide backwards-compatibility with Spotify's old Hermes API response.
 * `/getAlbum` (Legacy: `/albumPlayCount`)
